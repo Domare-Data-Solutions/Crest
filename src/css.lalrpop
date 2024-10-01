@@ -60,15 +60,11 @@ pub PropertyList: Vec<Property> = {
 };
 
 pub Property: Property = {
-    <ident:Identifier> ":" <value:Value> ";" => (ident, Some(value)),
+    <ident:Identifier> ":" <value:r"\w+"> ";" => (ident, Some((value.to_string(), value.into()))),
     <ident:Identifier> ";" => (ident, None),
 };
 
-pub Value: (String, Unit) = {
-    // r".+" => (<>.to_string(), <>.into())
-};
-
 pub Identifier: String = r"[\w&&[^\d]]\w*" => String::from(<>);
-pub Number: f32 = r"\d*\.?\d+" => <>.parse::<f32>().unwrap();
+// pub Number: f32 = r"\d*\.?\d+" => <>.parse::<f32>().unwrap();
 
 
