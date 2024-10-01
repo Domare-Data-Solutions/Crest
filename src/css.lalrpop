@@ -1,0 +1,74 @@
+
+// use crate::ast::{Unit, Combinator, Property, PropertySet, Selector};
+use crate::ast::*;
+
+grammar;
+
+pub Css: Vec<PropertySet> = {
+    <first:PropertySet> <rest:PropertySet*> => vec![first].into_iter().chain(rest.into_iter()).collect()
+};
+
+pub PropertySet: PropertySet = {
+    <selectors:SelectorList> "{" <properties:PropertyList> "}" => PropertySet::new(selectors, properties),
+};
+
+pub SelectorList: Vec<Selector> = {
+    <first:Selector> "," <rest:SelectorList> => vec![first].into_iter().chain(rest.into_iter()).collect(),
+    Selector => vec![<>],
+}
+
+pub Selector: Selector = {
+    SimpleSelector => Selector::Simple(<>),
+    CompoundSelector => Selector::Compound(<>),
+    ComplexSelector => Selector::Complex(<>),
+};
+
+pub ComplexSelector: ComplexSelector = {
+    <sel:SimpleSelector> <first:Combination> <rest:Combination*> => (sel, vec![first].into_iter().chain(rest.into_iter()).collect()),
+};
+
+pub Combination: Combinator = {
+    "+" <sel:SimpleSelector> => Combinator::NextSibling(vec![sel]),
+    ">" <sel:SimpleSelector> => Combinator::Child(vec![sel]),
+    "||" <sel:SimpleSelector> => Combinator::Column(vec![sel]),
+    "~" <sel:SimpleSelector> => Combinator::SubsequentSibling(vec![sel]),
+    " " <sel:SimpleSelector> => Combinator::Descendent(vec![sel]),
+    "|" <sel:SimpleSelector> => Combinator::Namespace(vec![sel]),
+}
+
+pub CompoundSelector: CompoundSelector = {
+    // <first:SimpleSelector> <rest:SimpleSelector*> => vec![first].into_iter().chain(rest.into_iter()).collect()
+}
+
+// TODO: Implement AttributeSelector, PseudoclassSelector, PseudoelementSelector
+pub SimpleSelector: SimpleSelector = {
+    BasicSelector => SimpleSelector::Basic(<>),
+    // AttributeSelector => SimpleSelector::Attribute(<>),
+    // PseudoclassSelector => SimpleSelector::Pseudoclass(<>),
+    // PseudoelementSelector => SimpleSelector::Pseudoelement(<>),
+}
+
+pub BasicSelector: BasicSelector = {
+    r"[\w&&[^\d]]\w*"   => BasicSelector::Type(<>.to_string()),
+    r"\.[\w&&[^\d]]\w*" => BasicSelector::Class(<>.to_string()),
+    r"#[\w&&[^\d]]\w*"  => BasicSelector::Id(<>.to_string()),
+    r"\*"               => BasicSelector::Universal,
+}
+
+pub PropertyList: Vec<Property> = {
+    <first:Property> <rest:Property*> => vec![first].into_iter().chain(rest.into_iter()).collect()
+};
+
+pub Property: Property = {
+    <ident:Identifier> ":" <value:Value> ";" => (ident, Some(value)),
+    <ident:Identifier> ";" => (ident, None),
+};
+
+pub Value: (String, Unit) = {
+    // r".+" => (<>.to_string(), <>.into())
+};
+
+pub Identifier: String = r"[\w&&[^\d]]\w*" => String::from(<>);
+pub Number: f32 = r"\d*\.?\d+" => <>.parse::<f32>().unwrap();
+
+
