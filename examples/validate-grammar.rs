@@ -98,14 +98,14 @@ fn main() {
         }
     }
     
-    let big_rules = vec![Rule::Css, Rule::Rule, Rule::PropertyList, Rule::Selector];
+    let no_print: Vec<Rule> = collection![Rule::Css, Rule::Rule, Rule::PropertyList, Rule::Selector];
 
     for (depth, token, source) in tokens.iter().rev() {
         let indent = std::iter::repeat(" ").take(2 * depth).collect::<String>();
         let token_type = format!("{token:?}");
         let offset = 25 - (2 * depth);
 
-        if !big_rules.contains(token) {
+        if !no_print.contains(token) {
             println!("{indent}- {token_type:<offset$}: '{source}'");
         }
         else {

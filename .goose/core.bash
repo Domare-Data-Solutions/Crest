@@ -91,18 +91,22 @@ function arr_pop {
 # ================================================================================================
 #                                       CORE FUNCTIONALITY
 function validate_dependencies {
-    local all_deps=(${BUILTIN_DEPENDENCIES[@]} ${DEPENDENCIES[@]})
-    local -a missing_deps
+    {
+        source targets/common.bash
 
-    for (( i=0; i<${#all_deps[@]}; i++ )); do
-        if ! which "${all_deps[i]}" &> /dev/null; then
-            missing_deps+=("\n\t${all_deps[i]}")
+        local all_deps=(${BUILTIN_DEPENDENCIES[@]} ${DEPENDENCIES[@]})
+        local -a missing_deps
+
+        for (( i=0; i<${#all_deps[@]}; i++ )); do
+            if ! which "${all_deps[i]}" &> /dev/null; then
+                missing_deps+=("\n\t${all_deps[i]}")
+            fi
+        done
+
+        if [[ ${#missing_deps} -ne 0 ]]; then
+            error "Please install missing dependencies:${missing_deps[*]}\n" 255
         fi
-    done
-
-    if [[ ${#missing_deps} -ne 0 ]]; then
-        error "Please install missing dependencies:${missing_deps[*]}\n" 255
-    fi
+    }
 }
 
 # (1: variable)
