@@ -1,6 +1,6 @@
-#![allow(warnings)]
 
-use pest::{Parser, iterators::Pair, Token, Position, Span};
+use pest::{Parser, Token, Position};
+use clap::{arg, command, Parser as Cli};
 
 use std::collections::HashMap;
 use std::fs::read_to_string;
@@ -18,6 +18,21 @@ macro_rules! collection {
         use std::iter::{Iterator, IntoIterator};
         Iterator::collect(IntoIterator::into_iter([$($v,)*]))
     }};
+}
+
+
+#[derive(Cli)]
+#[command(name = "validate-grammar", about = "Run the generated css parser on the provided source")]
+struct ValidationArgs {
+    /// use `source` as a filepath to read instead of raw text
+    #[arg(short, long)]
+    file: bool,
+
+    /// the name of the parser rule to evaluate
+    rule: String,
+
+    /// default: raw-text to parse ; --file mode: read file at this path, parse contents
+    source: String,
 }
 
 fn main() {
@@ -57,23 +72,27 @@ fn main() {
         "whitespace"        => Rule::Whitespace,
     };
 
-    let rule_raw = std::env::args().nth(1).expect("No rule provided!");
-    let mut input = std::env::args().nth(2).expect("No source provided!");
+    let arguments = ValidationArgs::parse();
 
-    let rule = rule_map.get(rule_raw.to_lowercase().as_str())
-        .expect(format!("Could not parse rule type '{}'!", rule_raw).as_str())
+    let source: String;
+
+    let rule = rule_map.get(arguments.rule.to_lowercase().as_str())
+        .expect(format!("Could not parse rule type '{}'!", arguments.rule).as_str())
         ;
 
-    if input.eq("-f") {
+    if arguments.file {
         let filepath = std::env::args().nth(3).expect("No file provided!");
         let result = read_to_string(filepath);
         match result {
-            Ok(contents) => input = contents,
-            Err(_) => todo!(),
+            Ok(contents) => source = contents,
+            Err(_) => panic!("Failed to read '{}'!", arguments.source),
         }
     }
+    else {
+        source = arguments.source;
+    }
 
-    let mut parsed = CssParser::parse(*rule, input.as_str())
+    let parsed = CssParser::parse(*rule, &source)
         .expect("Failed to parse provided source")
         .flatten()
         ;
