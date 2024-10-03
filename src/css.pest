@@ -1,0 +1,45 @@
+
+Css = { Whitespace ~ (Rule ~ Whitespace)* }
+
+Rule = { Selector ~ Whitespace ~ "{" ~ Whitespace ~ PropertyList ~ "}" ~ Whitespace? }
+
+Selector = { ComplexSelector | CompoundSelector }
+    ComplexSelector = { CompoundSelector ~ Whitespace ~ (Combinator ~ Whitespace ~ Combination)+ }
+        Combination = _{ CompoundSelector ~ Whitespace ~ Combinator ~ Whitespace ~ CompoundSelector }
+            Combinator = _{ NextSibling | Child | Column | SubsequentSibling | Descendent | Namespace }
+                NextSibling         = _{ "+" }
+                Child               = _{ ">" }
+                Column              = _{ "||" }
+                SubsequentSibling   = _{ "~" }
+                Descendent          = _{ " " }
+                Namespace           = _{ "|" }
+    CompoundSelector = { SimpleSelector ~ (Whitespace ~ "," ~ Whitespace ~ SimpleSelector)* }
+    // TODO: Implement { Attribute, Pseudoclass, Pseudoelement } Simple Selectors
+    SimpleSelector = _{ BasicSelector* }
+        BasicSelector = _{ TypeSelector | ClassSelector | IdSelector | UniversalSelector }
+            IdSelector = _{ "#" ~ !("#") ~ BasicSelector }
+            ClassSelector = _{ "." ~ !(".") ~ BasicSelector }
+            TypeSelector = _{ Identifier }
+            UniversalSelector = _{ "*" }
+
+PropertyList = { (Property ~ Whitespace)* }
+Property = { PropertyAssign | PropertyStatement }
+    PropertyAssign = _{ Identifier ~ Whitespace ~ ":" ~ Whitespace ~ Value ~ ";" }
+    PropertyStatement = _{ Identifier ~ Whitespace ~ ";" }
+
+Value = { ((Number | Identifier | String | Color) ~ ("," ~ Whitespace ~ Value)* ~ Whitespace)+ }
+
+Color = @{ "#" ~ ASCII_DIGIT{6,8} }
+
+Number = _{ WithUnit | WithoutUnit }
+    WithUnit = _{ ("+"|"-")? ~ (Float | Int) ~ Unit }
+    WithoutUnit = _{ ("+"|"-")? ~ (Float | Int) }
+    Int = _{ ASCII_DIGIT+ }
+    Float = _{ ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT+ }
+    Unit = _{ ("cm"|"mm"|"in"|"px"|"pt"|"pc") | ("em"|"ex"|"ch"|"rem"|"vw"|"vh"|"vmin"|"vmax"|"%") }
+
+String = { ("\"" ~ (!("\"") ~ ASCII)* ~ "\"") | ("'" ~ (!("'") ~ ASCII)* ~ "'") }
+
+Identifier = { (ASCII_ALPHA|"_"|"-") ~ (ASCII_ALPHANUMERIC|"_"|"-")* }
+
+Whitespace = _{ (" " | "\t" | NEWLINE)* }

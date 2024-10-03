@@ -8,12 +8,10 @@
 //! For more information on Peacock, [click here](#)!
 //! 
 
-use lalrpop_util::lalrpop_mod;
+use pest_derive::Parser;
 
-lalrpop_mod!(
-    #[allow(clippy::ptr_arg)]
-    #[rustfmt::skip]
-    pub css
-);
+#[derive(Parser)]
+#[grammar = "css.pest"]
+pub struct CssParser;
 
 pub mod ast;

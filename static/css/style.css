@@ -1,11 +1,3 @@
-/* Copied from http://bakefile.sourceforge.net/, which appears
-   licensed under the GNU GPL. */
-
-
-/***************************************************************************
-                             Basic headers and text:
- ***************************************************************************/
-
 body
 {
     font-family: "Nimbus Sans L", sans-serif;
@@ -19,12 +11,12 @@ h1, h2, h3, h4
     color: #005aa0;
 }
 
-h1 /* title */
+h1 
 {
     font-size: 200%;
 }
 
-h2 /* chapters, appendices, subtitle */
+h2 
 {
     font-size: 180%;
 }
@@ -36,31 +28,24 @@ div.book
 
 div.book > div
 {
-    /*
-     * based on https://medium.com/@zkareemz/golden-ratio-62b3b6d4282a
-     * we do 70 characters per line to fit code listings better
-     * 70 * (font-size / 1.618)
-     * expression for emacs:
-     * (* 70 (/ 1 1.618))
-     */
     max-width: 43.2em;
     text-align: left;
     margin: auto;
 }
 
-/* Extra space between chapters, appendices. */
+
 div.chapter > div.titlepage h2, div.appendix > div.titlepage h2
 {
     margin-top: 1.5em;
 }
 
-div.section > div.titlepage h2 /* sections */
+div.section > div.titlepage h2 
 {
     font-size: 150%;
     margin-top: 1.5em;
 }
 
-h3 /* subsections */
+h3 
 {
     font-size: 125%;
 }
@@ -76,7 +61,7 @@ div.appendix h3
     margin-top: 1.5em;
 }
 
-div.refnamediv h2, div.refsynopsisdiv h2, div.refsection h2 /* refentry parts */
+div.refnamediv h2, div.refsynopsisdiv h2, div.refsection h2 
 {
     margin-top: 1.4em;
     font-size: 125%;
@@ -87,10 +72,6 @@ div.refsection h3
     font-size: 110%;
 }
 
-
-/***************************************************************************
-                               Examples:
- ***************************************************************************/
 
 div.example
 {
@@ -113,11 +94,6 @@ div.example pre
     box-shadow: none;
 }
 
-
-/***************************************************************************
-                            Screen dumps:
- ***************************************************************************/
-
 pre.screen, pre.programlisting
 {
     border: 1px solid #b0b0b0;
@@ -137,10 +113,6 @@ div.example pre.programlisting
     padding: 0 0;
     margin: 0 0 0 0;
 }
-
-/***************************************************************************
-                               Notes, warnings etc:
- ***************************************************************************/
 
 .note, .warning
 {
@@ -189,20 +161,10 @@ div.navfooter *
     font-size: 90%;
 }
 
-
-/***************************************************************************
-                        Links colors and highlighting:
- ***************************************************************************/
-
 a { text-decoration: none; }
 a:hover { text-decoration: underline; }
 a:link { color: #0048b3; }
 a:visited { color: #002a6a; }
-
-
-/***************************************************************************
-                              Table of contents:
- ***************************************************************************/
 
 div.toc
 {
@@ -214,11 +176,6 @@ div.toc dl
     margin-top: 0em;
     margin-bottom: 0em;
 }
-
-
-/***************************************************************************
-                               Special elements:
- ***************************************************************************/
 
 tt, code
 {

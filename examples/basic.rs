@@ -2,12 +2,13 @@
 use std::ffi::OsString;
 use std::fs::read_to_string;
 
-use peacock_crest::{css, ast};
+// use peacock_crest::{css, ast};
+use peacock_crest::CssParser;
 
 fn main() {
     let dir = "static/css/style.css";
     let content_raw = read_to_string(dir).unwrap();
-    let content_result = css::CssParser::new().parse(&content_raw);
+    let content_result = CssParser::new().parse(&content_raw);
     if content_result.is_err() {
         let err = content_result.err().unwrap();
         println!("{err}");

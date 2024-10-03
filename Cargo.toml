@@ -4,9 +4,6 @@ version = "0.1.0"
 authors = ["Maxine Alexander <Max.Alexander3721@gmail.com>"]
 edition = "2021"
 
-
-[build-dependencies]
-lalrpop = "0.21.0"
-
 [dependencies]
-lalrpop-util = { version = "0.21.0", features = ["lexer", "unicode"] }
+pest = "2.7.13"
+pest_derive = "2.7.13"

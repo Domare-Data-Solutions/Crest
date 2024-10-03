@@ -22,7 +22,7 @@ pub Selector: Selector = {
 };
 
 pub ComplexSelector: ComplexSelector = {
-    <sel:SimpleSelector> <first:Combination> <rest:Combination*> => (sel, vec![first].into_iter().chain(rest.into_iter()).collect()),
+    <sel:CompoundSelector> <first:Combination> <rest:Combination*> => (sel, vec![first].into_iter().chain(rest.into_iter()).collect()),
 };
 
 pub Combination: Combinator = {
@@ -61,7 +61,7 @@ pub Property: Property = {
     <ident:r"[\w&&[^\d]]\w*"> ";" => (ident.to_string(), None),
 };
 
-// pub Identifier: String = r"[\w&&[^\d]]\w*" => String::from(<>);
+pub Identifier: String = r"[\w&&[^\d]]\w*" => String::from(<>);
 // pub Number: f32 = r"\d*\.?\d+" => <>.parse::<f32>().unwrap();
 
 
