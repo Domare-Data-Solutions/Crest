@@ -1,11 +1,11 @@
 
-use pest::{Parser, Token, Position};
+use pest::{iterators::FlatPairs, Parser, Position, Token};
 use clap::{arg, command, Parser as Cli};
 
 use std::collections::HashMap;
 use std::fs::read_to_string;
 
-use peacock_crest::{CssParser, Rule};
+use peacock_crest::parse::{CssParser, Rule};
 
 macro_rules! collection {
     // map-like
@@ -27,6 +27,10 @@ struct ValidationArgs {
     /// use `source` as a filepath to read instead of raw text
     #[arg(short, long)]
     file: bool,
+
+    /// do not print the children of matches
+    #[arg(short, long)]
+    no_print_children: bool,
 
     /// the name of the parser rule to evaluate
     rule: String,
@@ -56,33 +60,26 @@ fn main() {
         "classselector"     => Rule::ClassSelector,
         "idselector"        => Rule::IdSelector,
         "universalselector" => Rule::UniversalSelector,
-        "propertylist"      => Rule::PropertyList,
         "property"          => Rule::Property,
-        "propertyassign"    => Rule::PropertyAssign,
-        "propertystatement" => Rule::PropertyStatement,
         "value"             => Rule::Value,
         "number"            => Rule::Number,
-        "withunit"          => Rule::WithUnit,
-        "withoutunit"       => Rule::WithoutUnit,
         "int"               => Rule::Int,
         "float"             => Rule::Float,
         "unit"              => Rule::Unit,
         "string"            => Rule::String,
         "identifier"        => Rule::Identifier,
-        "whitespace"        => Rule::Whitespace,
     };
 
     let arguments = ValidationArgs::parse();
 
     let source: String;
 
-    let rule = rule_map.get(arguments.rule.to_lowercase().as_str())
+    let match_rule = rule_map.get(arguments.rule.to_lowercase().as_str())
         .expect(format!("Could not parse rule type '{}'!", arguments.rule).as_str())
         ;
 
     if arguments.file {
-        let filepath = std::env::args().nth(3).expect("No file provided!");
-        let result = read_to_string(filepath);
+        let result = read_to_string(&arguments.source);
         match result {
             Ok(contents) => source = contents,
             Err(_) => panic!("Failed to read '{}'!", arguments.source),
@@ -92,37 +89,53 @@ fn main() {
         source = arguments.source;
     }
 
-    let parsed = CssParser::parse(*rule, &source)
-        .expect("Failed to parse provided source")
-        .flatten()
-        ;
+    let parsed_result = CssParser::parse(*match_rule, &source);
+    let parsed: FlatPairs<'_, Rule>;
+    match parsed_result {
+        Ok(pairs) => parsed = pairs.flatten(),
+        Err(err) => {
+            println!("{err}");
+            return;
+        },
+    }
 
     let mut stack: Vec<(Rule, Position)> = Vec::new();
     let mut tokens: Vec<(usize, Rule, String)> = Vec::new();
     let mut depth = 0usize;
+
+    // let mut match_depth: Option<usize> = None;
     
     for token in parsed.tokens() {
         match token {
             Token::Start { rule, pos } => {
                 // if !vec![]
+                // if rule == *match_rule {
+                //     match_depth = Some(depth);
+                // }
                 depth += 1;
                 stack.push((rule.clone(), pos));
             },
             Token::End { rule, pos } => {
                 let (start_rule, start_pos) = stack.pop().unwrap();
                 assert_eq!(start_rule, rule);
-                tokens.push((depth, rule, start_pos.span(&pos).as_str().to_string()));
                 depth -= 1;
+                // if match_depth.is_some_and(|x| depth == x) {
+                //     match_depth = None;
+                // }
+                // if !(arguments.no_print_children && match_depth.is_some_and(|x| depth > x)) {
+                    tokens.push((depth, rule, start_pos.span(&pos).as_str().to_string()));
+                // }
+
             },
         }
     }
     
-    let no_print: Vec<Rule> = collection![Rule::Css, Rule::Rule, Rule::PropertyList, Rule::Selector];
+    let no_print: Vec<Rule> = collection![Rule::Css, Rule::Rule, Rule::Property, Rule::Selector];
 
     for (depth, token, source) in tokens.iter().rev() {
         let indent = std::iter::repeat(" ").take(2 * depth).collect::<String>();
         let token_type = format!("{token:?}");
-        let offset = 25 - (2 * depth);
+        let offset = 28 - (2 * depth);
 
         if !no_print.contains(token) {
             println!("{indent}- {token_type:<offset$}: '{source}'");

@@ -1,45 +1,40 @@
 
-Css = { Whitespace ~ (Rule ~ Whitespace)* }
+Css = { Rule* }
 
-Rule = { Selector ~ Whitespace ~ "{" ~ Whitespace ~ PropertyList ~ "}" ~ Whitespace? }
+Rule = { Selector ~ "{" ~ Property* ~ "}" }
 
-Selector = { ComplexSelector | CompoundSelector }
-    ComplexSelector = { CompoundSelector ~ Whitespace ~ (Combinator ~ Whitespace ~ Combination)+ }
-        Combination = _{ CompoundSelector ~ Whitespace ~ Combinator ~ Whitespace ~ CompoundSelector }
-            Combinator = _{ NextSibling | Child | Column | SubsequentSibling | Descendent | Namespace }
-                NextSibling         = _{ "+" }
-                Child               = _{ ">" }
-                Column              = _{ "||" }
-                SubsequentSibling   = _{ "~" }
-                Descendent          = _{ " " }
-                Namespace           = _{ "|" }
-    CompoundSelector = { SimpleSelector ~ (Whitespace ~ "," ~ Whitespace ~ SimpleSelector)* }
+Selector = { ComplexSelector | Combination | CompoundSelector }
+    ComplexSelector = { CompoundSelector ~ (Combinator ~ CompoundSelector)+ }
+    Combination = { CompoundSelector ~ Combinator ~ CompoundSelector }
+        Combinator = { NextSibling | Child | Column | SubsequentSibling | Descendent | Namespace }
+            NextSibling         = { WHITESPACE ~ "+" ~ WHITESPACE }
+            Child               = { WHITESPACE ~ ">" ~ WHITESPACE }
+            Column              = { WHITESPACE ~ "||" ~ WHITESPACE }
+            SubsequentSibling   = { WHITESPACE ~ "~" ~ WHITESPACE }
+            Namespace           = { WHITESPACE ~ "|" ~ WHITESPACE }
+            Descendent          = { " " }
+    CompoundSelector = { SimpleSelector ~ ("," ~ SimpleSelector)* }
     // TODO: Implement { Attribute, Pseudoclass, Pseudoelement } Simple Selectors
-    SimpleSelector = _{ BasicSelector* }
-        BasicSelector = _{ TypeSelector | ClassSelector | IdSelector | UniversalSelector }
-            IdSelector = _{ "#" ~ !("#") ~ BasicSelector }
-            ClassSelector = _{ "." ~ !(".") ~ BasicSelector }
-            TypeSelector = _{ Identifier }
-            UniversalSelector = _{ "*" }
+    SimpleSelector = { BasicSelector* }
+        BasicSelector = { TypeSelector | ClassSelector | IdSelector | UniversalSelector }
+            IdSelector = { "#" ~ !("#") ~ BasicSelector }
+            ClassSelector = { "." ~ !(".") ~ BasicSelector }
+            TypeSelector = { Identifier }
+            UniversalSelector = { "*" }
 
-PropertyList = { (Property ~ Whitespace)* }
-Property = { PropertyAssign | PropertyStatement }
-    PropertyAssign = _{ Identifier ~ Whitespace ~ ":" ~ Whitespace ~ Value ~ ";" }
-    PropertyStatement = _{ Identifier ~ Whitespace ~ ";" }
+Property = { Identifier ~ ":" ~ Value ~ ";" }
 
-Value = { ((Number | Identifier | String | Color) ~ ("," ~ Whitespace ~ Value)* ~ Whitespace)+ }
+Value = { ((Function | Number | Identifier | String | Hex) ~ ("," ~ Value)*)+ }
+    Function = { Identifier ~ "(" ~ Value ~ ")" }
+    Hex = @{ "#" ~ ASCII_DIGIT{6} }
+    String = { ("\"" ~ (!("\"") ~ ASCII)* ~ "\"") | ("'" ~ (!("'") ~ ASCII)* ~ "'") }
+    Number = { ( ("+"|"-")? ~ (Float | Int) ~ Unit)
+             | ( ("+"|"-")? ~ (Float | Int)) }
+        Int = { ASCII_DIGIT+ }
+        Float = { ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT+ }
+        Unit = { ("cm"|"mm"|"in"|"px"|"pt"|"pc") | ("em"|"ex"|"ch"|"rem"|"vw"|"vh"|"vmin"|"vmax"|"%") }
 
-Color = @{ "#" ~ ASCII_DIGIT{6,8} }
+Identifier = _{ (ASCII_ALPHA|"_"|"-") ~ (ASCII_ALPHANUMERIC|"_"|"-")* }
 
-Number = _{ WithUnit | WithoutUnit }
-    WithUnit = _{ ("+"|"-")? ~ (Float | Int) ~ Unit }
-    WithoutUnit = _{ ("+"|"-")? ~ (Float | Int) }
-    Int = _{ ASCII_DIGIT+ }
-    Float = _{ ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT+ }
-    Unit = _{ ("cm"|"mm"|"in"|"px"|"pt"|"pc") | ("em"|"ex"|"ch"|"rem"|"vw"|"vh"|"vmin"|"vmax"|"%") }
-
-String = { ("\"" ~ (!("\"") ~ ASCII)* ~ "\"") | ("'" ~ (!("'") ~ ASCII)* ~ "'") }
-
-Identifier = { (ASCII_ALPHA|"_"|"-") ~ (ASCII_ALPHANUMERIC|"_"|"-")* }
-
-Whitespace = _{ (" " | "\t" | NEWLINE)* }
+WHITESPACE = _{ (" " | "\t" | NEWLINE) }
+COMMENT = _{ "/*" ~ (!"*/" ~ ANY)* ~ "*/" }
