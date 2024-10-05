@@ -1,18 +1,17 @@
 
-Css = { Rule* }
+Css = { SOI ~ Rule* ~ EOI }
 
 Rule = { Selector ~ "{" ~ Property* ~ "}" }
 
-Selector = { ComplexSelector | Combination | CompoundSelector }
-    ComplexSelector = { CompoundSelector ~ (Combinator ~ CompoundSelector)+ }
-    Combination = { CompoundSelector ~ Combinator ~ CompoundSelector }
-        Combinator = { NextSibling | Child | Column | SubsequentSibling | Descendent | Namespace }
-            NextSibling         = { WHITESPACE ~ "+" ~ WHITESPACE }
-            Child               = { WHITESPACE ~ ">" ~ WHITESPACE }
-            Column              = { WHITESPACE ~ "||" ~ WHITESPACE }
-            SubsequentSibling   = { WHITESPACE ~ "~" ~ WHITESPACE }
-            Namespace           = { WHITESPACE ~ "|" ~ WHITESPACE }
-            Descendent          = { " " }
+Selector = { ComplexSelector }
+    ComplexSelector = { CompoundSelector ~ (Combinator ~ CompoundSelector)* }
+        Combinator = @{ NextSibling | Child | Column | SubsequentSibling | Descendent | Namespace }
+            NextSibling         = { "+" }
+            Child               = { ">" }
+            Column              = { "||" }
+            SubsequentSibling   = { "~" }
+            Namespace           = { "|" }
+            Descendent          = @{ " " }
     CompoundSelector = { SimpleSelector ~ ("," ~ SimpleSelector)* }
     // TODO: Implement { Attribute, Pseudoclass, Pseudoelement } Simple Selectors
     SimpleSelector = { BasicSelector* }
@@ -26,7 +25,7 @@ Property = { Identifier ~ ":" ~ Value ~ ";" }
 
 Value = { ((Function | Number | Identifier | String | Hex) ~ ("," ~ Value)*)+ }
     Function = { Identifier ~ "(" ~ Value ~ ")" }
-    Hex = @{ "#" ~ ASCII_DIGIT{6} }
+    Hex = @{ "#" ~ (ASCII_DIGIT | 'a'..'f' | 'A'..'F'){6} }
     String = { ("\"" ~ (!("\"") ~ ASCII)* ~ "\"") | ("'" ~ (!("'") ~ ASCII)* ~ "'") }
     Number = { ( ("+"|"-")? ~ (Float | Int) ~ Unit)
              | ( ("+"|"-")? ~ (Float | Int)) }
@@ -34,7 +33,7 @@ Value = { ((Function | Number | Identifier | String | Hex) ~ ("," ~ Value)*)+ }
         Float = { ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT+ }
         Unit = { ("cm"|"mm"|"in"|"px"|"pt"|"pc") | ("em"|"ex"|"ch"|"rem"|"vw"|"vh"|"vmin"|"vmax"|"%") }
 
-Identifier = _{ (ASCII_ALPHA|"_"|"-") ~ (ASCII_ALPHANUMERIC|"_"|"-")* }
+Identifier = { (ASCII_ALPHA|"_"|"-") ~ (ASCII_ALPHANUMERIC|"_"|"-")* }
 
 WHITESPACE = _{ (" " | "\t" | NEWLINE) }
 COMMENT = _{ "/*" ~ (!"*/" ~ ANY)* ~ "*/" }

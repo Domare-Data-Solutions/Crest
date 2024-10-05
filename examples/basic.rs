@@ -1,4 +1,3 @@
-
 use clap::{command, Parser as Cli};
 use pest::iterators::FlatPairs;
 use pest::Parser as _;
@@ -22,7 +21,10 @@ macro_rules! collection {
 }
 
 #[derive(Cli)]
-#[command(name = "validate-grammar", about = "Run the generated css parser on the provided source")]
+#[command(
+    name = "validate-grammar",
+    about = "Run the generated css parser on the provided source"
+)]
 struct ValidationArgs {
     /// the name of the parser rule to evaluate
     rule: String,
@@ -32,12 +34,11 @@ struct ValidationArgs {
 }
 
 fn main() {
-    let rule_map: HashMap<&str, Rule> = collection!{
+    let rule_map: HashMap<&str, Rule> = collection! {
         "css"               => Rule::Css,
         "rule"              => Rule::Rule,
         "selector"          => Rule::Selector,
         "complexselector"   => Rule::ComplexSelector,
-        "combination"       => Rule::Combination,
         "combinator"        => Rule::Combinator,
         "nextsibling"       => Rule::NextSibling,
         "child"             => Rule::Child,
@@ -64,9 +65,9 @@ fn main() {
 
     let arguments = ValidationArgs::parse();
 
-    let match_rule = rule_map.get(arguments.rule.to_lowercase().as_str())
-        .expect(format!("Could not parse rule type '{}'!", arguments.rule).as_str())
-        ;
+    let match_rule = rule_map
+        .get(arguments.rule.to_lowercase().as_str())
+        .expect(format!("Could not parse rule type '{}'!", arguments.rule).as_str());
 
     let css_source: String;
     match read_to_string(&arguments.source_path) {
@@ -81,10 +82,8 @@ fn main() {
         Err(err) => {
             println!("{err}");
             return;
-        },
+        }
     }
 
-    for _rule in grammar_rules {
-
-    }
+    for _rule in grammar_rules {}
 }

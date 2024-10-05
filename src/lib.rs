@@ -1,15 +1,16 @@
 #![allow(warnings)]
 
 //! # Crest
-//! 
+//!
 //! Crest is [Peacock](#)'s core library for parsing css files.
 //! While Crest is intended for use by Peacock, it is designed
 //! to be usable for other projects as well.
-//! 
+//!
 //! For more information on Peacock, [click here](#)!
-//! 
+//!
 
 pub mod parse;
+pub mod values;
 
 // use pest::Token;
 
@@ -18,9 +19,11 @@ use parse::Rule;
 #[derive(Debug)]
 pub enum Error {
     IncorrectRuleType(Rule, Rule),
+    ValueError(values::Error),
 }
 
-pub struct PropertyList(std::collections::HashMap<String, Vec<String>>);
+#[derive(Clone)]
+pub struct PropertyList(pub std::collections::HashMap<String, Vec<values::ValueType>>);
 
 pub struct Selector {
     name: Option<String>,
@@ -29,14 +32,19 @@ pub struct Selector {
     universal: bool,
 }
 
+#[derive(Clone)]
 pub struct RuleSet {
-    selectors: std::rc::Rc<[Selector]>,
-    properties: PropertyList,
+    pub selectors: std::rc::Rc<[Selector]>,
+    pub properties: PropertyList,
 }
 
 // ========== IMPLS ===========
 
-fn find_descendent_type<'a>(ancestor: pest::iterators::Pair<'a, Rule>, stack: &mut Vec<Rule>, stack_depth: usize) -> Vec<pest::iterators::Pair<'a, Rule>> {
+fn find_descendent_type<'a>(
+    ancestor: pest::iterators::Pair<'a, Rule>,
+    stack: &mut Vec<Rule>,
+    stack_depth: usize,
+) -> Vec<pest::iterators::Pair<'a, Rule>> {
     assert!(stack_depth < stack.len());
     let current_rule_search = stack[stack_depth];
     let mut results: Vec<pest::iterators::Pair<'a, Rule>> = Vec::new();
@@ -61,7 +69,7 @@ impl std::error::Error for Error {}
 
 //     fn try_from(value: pest::iterators::Pair<'a, Rule>) -> Result<Self, Self::Error> {
 //         assert_eq!(value.as_rule(), Rule::Selector);
-        
+
 //         if value.as_rule() == Rule::Selector && !value.as_str().eq("*") {
 //             let mut name_stack: Vec<Rule> = vec![Rule::CompoundSelector, Rule::SimpleSelector, Rule::BasicSelector];
 //             let names = find_descendent_type(value.clone(), &mut name_stack);

@@ -163,9 +163,6 @@ div.navfooter *
 }
 
 a { text-decoration: none; }
-a:hover { text-decoration: underline; }
-a:link { color: #0048b3; }
-a:visited { color: #002a6a; }
 
 div.toc
 {
