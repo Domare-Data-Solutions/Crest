@@ -38,7 +38,7 @@
                     "kind": "example"
                 }
             },
-            "args": ["--no-print-children", "--file", "rule", "static/css/style.css"],
+            "args": ["--file", "rule", "static/css/style.css"],
             "cwd": "${workspaceFolder}"
         },
         {

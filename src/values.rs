@@ -1,7 +1,7 @@
-#[derive(Debug)]
-pub enum Error {
-    ConversionError(String),
-}
+use pest::iterators::Pair;
+use strum_macros::EnumString;
+
+use super::parse::Rule;
 
 #[derive(Default)]
 pub enum Position {
@@ -33,28 +33,43 @@ pub enum Visibility {
     Hidden,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, EnumString)]
 pub enum Unit {
+    #[strum(serialize = "cm")]
     Cm,
+    #[strum(serialize = "mm")]
     Mm,
+    #[strum(serialize = "in")]
     In,
+    #[strum(serialize = "px")]
     Px,
+    #[strum(serialize = "pt")]
     Pt,
+    #[strum(serialize = "pc")]
     Pc,
 
+    #[strum(serialize = "em")]
     Em,
+    #[strum(serialize = "ex")]
     Ex,
+    #[strum(serialize = "ch")]
     Ch,
+    #[strum(serialize = "rem")]
     Rem,
+    #[strum(serialize = "vw")]
     VW,
+    #[strum(serialize = "vh")]
     VH,
+    #[strum(serialize = "vmin")]
     VMin,
+    #[strum(serialize = "vmax")]
     VMax,
+    #[strum(serialize = "%")]
     Percent,
 }
 
 pub type Function = (String, Vec<ValueType>);
-pub type Number = (f32, Unit);
+pub type Number = (f32, Option<Unit>);
 pub type Color = [u8; 3];
 
 #[derive(Debug, Clone)]
@@ -66,53 +81,74 @@ pub enum ValueType {
     Function(Function),
 }
 
-// ========== IMPLS ===========
-
-impl std::fmt::Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{self:?}")
-    }
+#[derive(Debug, Clone, EnumString)]
+pub enum Combinator {
+    None,
+    #[strum(serialize = "+")]
+    NextSibling,
+    #[strum(serialize = ">")]
+    Child,
+    #[strum(serialize = "||")]
+    Column,
+    #[strum(serialize = "~")]
+    SubsequentSibling,
+    #[strum(serialize = "|")]
+    Namespace,
+    #[strum(serialize = " ")]
+    Descendent,
 }
 
-impl std::error::Error for Error {}
+pub enum BasicSelector {
+    Id(String),
+    Class(String),
+    Type(String),
+    Universal,
+}
 
-impl TryFrom<ValueType> for DisplayOption {
-    type Error = Error;
+pub type PropertyList = std::collections::HashMap<String, Vec<ValueType>>;
 
-    fn try_from(value: ValueType) -> Result<Self, Self::Error> {
-        match value {
-            ValueType::Identifier(display) => match display.as_str() {
-                "none" => Ok(DisplayOption::None),
-                "block" => Ok(DisplayOption::Block),
-                "inline" => Ok(DisplayOption::Inline),
-                "flow" => Ok(DisplayOption::Flow),
-                _ => Err(Self::Error::ConversionError(format!(
-                    "invalid DisplayOption value: {display}"
-                ))),
-            },
-            _ => Err(Self::Error::ConversionError(format!(
-                "unknown DisplayOption value type: {value:?}"
-            ))),
+#[derive(Clone, Debug)]
+pub struct SimpleSelector {
+    pub name: Option<String>,
+    pub id: Option<String>,
+    pub classes: Vec<String>,
+    pub universal: bool,
+}
+
+pub type Combination = (Combinator, SimpleSelector);
+pub type ComplexSelector = (SimpleSelector, Vec<Combination>);
+pub type CompoundSelector = (ComplexSelector, Vec<ComplexSelector>);
+
+pub type Selector = CompoundSelector;
+
+#[derive(Clone, Debug)]
+pub struct RuleSet {
+    pub selectors: Selector,
+    pub properties: PropertyList,
+}
+
+pub type Stylesheet = Vec<RuleSet>;
+
+// ========== IMPLS ===========
+
+impl BasicSelector {
+    pub fn inner(&self) -> Option<String> {
+        match self {
+            BasicSelector::Id(string) => Some(string.clone()),
+            BasicSelector::Class(string) => Some(string.clone()),
+            BasicSelector::Type(string) => Some(string.clone()),
+            _ => None,
         }
     }
 }
 
-impl TryFrom<(ValueType, ValueType)> for Display {
-    type Error = Error;
-
-    fn try_from(value: (ValueType, ValueType)) -> Result<Self, Self::Error> {
-        let inner_result = DisplayOption::try_from(value.0);
-        let outer_result = DisplayOption::try_from(value.1);
-
-        if inner_result.is_ok() && outer_result.is_ok() {
-            Ok(Display {
-                inner: inner_result.unwrap(),
-                outer: outer_result.unwrap(),
-            })
-        } else if inner_result.is_err() {
-            Err(inner_result.unwrap_err())
-        } else {
-            Err(outer_result.unwrap_err())
+impl SimpleSelector {
+    pub fn new() -> Self {
+        Self {
+            name: None,
+            id: None,
+            classes: Vec::new(),
+            universal: false,
         }
     }
 }

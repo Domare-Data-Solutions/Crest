@@ -1,9 +1,13 @@
+#![allow(unused_imports)]
+
 use clap::{arg, command, Parser as Cli};
-use pest::{iterators::FlatPairs, Parser, Position, Token};
+use pest::iterators::{Pair, Pairs};
+use pest::Parser;
 
 use std::collections::HashMap;
 use std::fs::read_to_string;
 
+use peacock_crest::values::{ValueType, PropertyList, RuleSet};
 use peacock_crest::parse::{CssParser, Rule};
 
 macro_rules! collection {
@@ -60,7 +64,9 @@ fn main() {
         "classselector"     => Rule::ClassSelector,
         "idselector"        => Rule::IdSelector,
         "universalselector" => Rule::UniversalSelector,
+        "propertylist"      => Rule::PropertyList,
         "property"          => Rule::Property,
+        "valuelist"         => Rule::ValueList,
         "value"             => Rule::Value,
         "number"            => Rule::Number,
         "int"               => Rule::Int,
@@ -88,46 +94,5 @@ fn main() {
         source = arguments.source;
     }
 
-    let parsed_result = CssParser::parse(*match_rule, &source);
-    let parsed: FlatPairs<'_, Rule>;
-    match parsed_result {
-        Ok(pairs) => parsed = pairs.flatten(),
-        Err(err) => {
-            println!("{err}");
-            return;
-        }
-    }
-
-    let mut stack: Vec<(Rule, Position)> = Vec::new();
-    let mut tokens: Vec<(usize, Rule, String)> = Vec::new();
-    let mut depth = 0usize;
-
-    for token in parsed.tokens() {
-        match token {
-            Token::Start { rule, pos } => {
-                depth += 1;
-                stack.push((rule.clone(), pos));
-            }
-            Token::End { rule, pos } => {
-                let (start_rule, start_pos) = stack.pop().unwrap();
-                assert_eq!(start_rule, rule);
-                depth -= 1;
-                tokens.push((depth, rule, start_pos.span(&pos).as_str().to_string()));
-            }
-        }
-    }
-
-    let no_print: Vec<Rule> = collection![Rule::Css, Rule::Rule, Rule::Property, Rule::Selector];
-
-    for (depth, token, source) in tokens.iter().rev() {
-        let indent = std::iter::repeat(" ").take(2 * depth).collect::<String>();
-        let token_type = format!("{token:?}");
-        let offset = 28 - (2 * depth);
-
-        if !no_print.contains(token) {
-            println!("{indent}- {token_type:<offset$}: '{source}'");
-        } else {
-            println!("{indent}- {token_type:<offset$}");
-        }
-    }
+    CssParser::parse(match_rule.clone(), source.as_str()).unwrap();
 }

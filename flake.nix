@@ -11,6 +11,9 @@
       in
       {
         devShell = with pkgs; mkShell {
+          packages = with pkgs; [
+            clippy
+          ];
           buildInputs = [
             cargo
             rustc

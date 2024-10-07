@@ -1,10 +1,12 @@
 
 Css = { SOI ~ Rule* ~ EOI }
 
-Rule = { Selector ~ "{" ~ Property* ~ "}" }
+Rule = { Selector ~ "{" ~ PropertyList ~ "}" }
 
-Selector = { ComplexSelector }
-    ComplexSelector = { CompoundSelector ~ (Combinator ~ CompoundSelector)* }
+Selector = { CompoundSelector }
+    CompoundSelector = { ComplexSelector ~ ("," ~ ComplexSelector)* }
+    ComplexSelector = { SimpleSelector ~ Combination* }
+        Combination = { Combinator ~ SimpleSelector }
         Combinator = @{ NextSibling | Child | Column | SubsequentSibling | Descendent | Namespace }
             NextSibling         = { "+" }
             Child               = { ">" }
@@ -12,28 +14,29 @@ Selector = { ComplexSelector }
             SubsequentSibling   = { "~" }
             Namespace           = { "|" }
             Descendent          = @{ " " }
-    CompoundSelector = { SimpleSelector ~ ("," ~ SimpleSelector)* }
     // TODO: Implement { Attribute, Pseudoclass, Pseudoelement } Simple Selectors
-    SimpleSelector = { BasicSelector* }
+    SimpleSelector = { (BasicSelector)* }
         BasicSelector = { TypeSelector | ClassSelector | IdSelector | UniversalSelector }
             IdSelector = { "#" ~ !("#") ~ BasicSelector }
             ClassSelector = { "." ~ !(".") ~ BasicSelector }
             TypeSelector = { Identifier }
             UniversalSelector = { "*" }
 
-Property = { Identifier ~ ":" ~ Value ~ ";" }
+PropertyList = { Property* }
+Property = { Identifier ~ ":" ~ ValueList ~ ";" }
 
-Value = { ((Function | Number | Identifier | String | Hex) ~ ("," ~ Value)*)+ }
-    Function = { Identifier ~ "(" ~ Value ~ ")" }
+ValueList = { Value ~ (","? ~ Value)* }
+Value = { Function | Number | Identifier | String | Hex }
+    Function = { Identifier ~ "(" ~ ValueList ~ ")" }
     Hex = @{ "#" ~ (ASCII_DIGIT | 'a'..'f' | 'A'..'F'){6} }
     String = { ("\"" ~ (!("\"") ~ ASCII)* ~ "\"") | ("'" ~ (!("'") ~ ASCII)* ~ "'") }
-    Number = { ( ("+"|"-")? ~ (Float | Int) ~ Unit)
-             | ( ("+"|"-")? ~ (Float | Int)) }
+    Number = ${ Sign? ~ (Float | Int) ~ Unit? }
+        Sign = { "+" | "-" }
         Int = { ASCII_DIGIT+ }
         Float = { ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT+ }
         Unit = { ("cm"|"mm"|"in"|"px"|"pt"|"pc") | ("em"|"ex"|"ch"|"rem"|"vw"|"vh"|"vmin"|"vmax"|"%") }
 
-Identifier = { (ASCII_ALPHA|"_"|"-") ~ (ASCII_ALPHANUMERIC|"_"|"-")* }
+Identifier = { (ASCII_ALPHA | "_" | "-") ~ (ASCII_ALPHANUMERIC | "_" | "-")* }
 
 WHITESPACE = _{ (" " | "\t" | NEWLINE) }
 COMMENT = _{ "/*" ~ (!"*/" ~ ANY)* ~ "*/" }
